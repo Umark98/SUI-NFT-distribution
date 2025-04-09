@@ -1,47 +1,22 @@
-module souv::souv_nft {
+module souv::admin {
+    
 
-    use std::string:: String; 
-
-    /// SOUV NFT structure
-    public struct SOUV has key, store {
+    public struct Admin has key {
         id: UID,
-        event: address,
-        event_name: vector<String>,   
-        attendee: address,
+        owner: address,
     }
 
-    
-    public struct Event has key, store {
-        id: UID,
-        name: vector<String>,         
-    }
-
-    /// Register and share a new event
-    public entry fun register_event(event_name: vector<String>, ctx: &mut TxContext) {
-        let event = Event {
+    public fun create_admin(ctx: &mut TxContext) {
+        let admin = Admin {
             id: object::new(ctx),
-            name: event_name,        
+            owner: tx_context::sender(ctx),
         };
-        transfer::share_object(event);
+        transfer::transfer(admin, tx_context::sender(ctx));
+    }
+
+    public fun assert_is_admin(admin: &Admin, ctx: &TxContext) {
+        assert!(admin.owner == tx_context::sender(ctx), 1);
     }
 
     
-    public entry fun mint_and_transfer_souv(
-        event: &Event,
-        recipient: address,
-        ctx: &mut TxContext
-    ) {
-        let souv = SOUV {
-            id: object::new(ctx),
-            event: object::id_to_address(&object::id(event)),
-            event_name: event.name,   
-            attendee: recipient,
-        };
-        transfer::public_transfer(souv, recipient);
-    }
-
-    
-    public entry fun claim_souv(souv: SOUV, recipient: address) {
-        transfer::public_transfer(souv, recipient);
-    }
 }
